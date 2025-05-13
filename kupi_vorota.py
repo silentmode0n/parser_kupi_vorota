@@ -6,36 +6,44 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import csv
+import time
 
 
 file_with_urls = 'urls.txt'
 file_result = 'products.csv'
+available_all = False
 
 
-def kupi_vorota(urls, filename):
+def kupi_vorota(urls, filename, available_all=False):
     # Настройка опций для запуска Firefox в режиме без GUI (необязательно)
     options = Options()
     # options.headless = True  # Uncomment для запуска в фоновом режиме
     # Создание драйвера
     driver = webdriver.Firefox(options=options)
     for url in urls:
-        parse_url(driver, url, filename)
+        parse_url(driver, url, filename, available_all)
     # Закрытие драйвера
     driver.quit()
 
 
-def parse_url(driver, url, filename):
+def parse_url(driver, url, filename, available_all=False):
     # Открытие страницы
     driver.get(url)
-    # Пролистывание страницы до самого низа
-    # Это делается для того, чтобы все товары были загружены
+    # Переключение фильтра на "В наличии и под заказ"
+    if available_all:
+        time.sleep(2)
+        filter = driver.find_element(By.ID, 'AVAILABLE_ALL')
+        filter.click()
+        time.sleep(2)
+
     while True:
+        # Пролистывание страницы до самого низа
+        # Это делается для того, чтобы все товары были загружены
         # Получение текущей высоты страницы
         last_height = driver.execute_script("return document.body.scrollHeight")
         # Пролистывание страницы до низа
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         # Пауза для загрузки контента
-        import time
         time.sleep(2)
         # Получение новой высоты страницы
         new_height = driver.execute_script("return document.body.scrollHeight")
@@ -85,8 +93,10 @@ def main():
     args = sys.argv
     if len(args) > 1:
         file_result = args[1]
+    if len(args) > 2 and args[2]=='all':
+        available_all = True
     urls = read_file_to_list(file_with_urls)
-    kupi_vorota(urls, file_result)
+    kupi_vorota(urls, file_result, available_all)
 
 
 if __name__ == '__main__':
