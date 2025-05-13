@@ -1,0 +1,4 @@
+# urls.txt - список url страниц сайта для парсинга
+
+# запуск на выполнение:
+python kupi_vorota.py result_file.csv
